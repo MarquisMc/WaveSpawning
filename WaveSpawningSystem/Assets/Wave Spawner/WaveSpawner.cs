@@ -4,65 +4,61 @@ using UnityEngine;
 
 public class WaveSpawner : MonoBehaviour
 {
-    public List<GameObject> objects = new List<GameObject>(); // the enemies that will spawn in the scene
+    [Tooltip("the objects that will spawn in the scene")]
+    public List<string> objects = new List<string>();
 
-    public List<Transform> spawns = new List<Transform>(); // object positions that the enemies spawn at
+    [Tooltip("object positions that the enemies spawn at")]
+    public List<Transform> spawns = new List<Transform>();
 
-    public List<GameObject> enemiesInScene = new List<GameObject>(); // enemies in a scene
+    [Tooltip("the objects in the scene")]
+    public List<GameObject> objectsInScene = new List<GameObject>();
 
-    public bool startSpawning = false; // start spawning enemies
-    public int EnemyCount; // amount of enemies in every wave
+    [Tooltip("start spawning objects")]
+    public bool startSpawning = false;
 
-    int waveCount; // counts the waves in the game.
+    [Tooltip("amount of enemies in every wave")]
+    public int objectCount;
 
-    public float spawnWait; // spawn an object between a certaint amount of time from spawn to spawn
+    [Tooltip(("max number of enemies per wave"))]
+    public int maxObjects;
 
-    public float startWait; // wait a certaint amount of time to start spawning enemies
+    [Tooltip("counts the waves that have been spawned")]
+    public int waveCount;
 
-    public float waveWait; // after every wave is over wait a certaint amount of time to spawn in the new wave
+    [Tooltip("spawn an object every x seconds")]
+    public float spawnWait;
 
-    public AudioSource nextWaveSound; // after every wave play this sound
+    [Tooltip("wait x seconds before start spawning waves")]
+    public float startWait;
 
-    public int amountOfEnemies; // number of enemies in the scene
-    public int maxEnemies; // max number of enemies
+    [Tooltip("wait x seconds before spawning the next wave")]
+    public float waveWait;
 
-    private float SpawnWaitDecrease;
+    [Tooltip("the wave spawner audio source")]
+    public AudioSource audioSource;
+
+    [Tooltip("the wave spawner for every wave audio clip")]
+    public AudioClip nextWaveSound; 
 
     // Start is called before the first frame update
     void Start()
     {
         waveCount = 0;
-       // StartCoroutine(Spawner()); // Coroutines can get IEnumerators to function
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        amountOfEnemies = enemiesInScene.Count;
         StartCoroutine(Spawner()); // Coroutines can get IEnumerators to function
     }
 
     IEnumerator Spawner() // use IEnumerators when you want have something to wait base on time
     {
-        yield return new WaitForSeconds(startWait); // time it has to wait before doing the action
-        // if there are no objects with the tag Enemy in the scene spawn more enemies.
+        yield return new WaitForSeconds(startWait); // wait for x seconds before starting the wave spawner
 
-        while (startSpawning)
-        {
-            if (amountOfEnemies <= 0 && amountOfEnemies <= maxEnemies)
+            if (objectsInScene.Count < maxObjects)
             {
-                waveCount++;
-                
-                if (nextWaveSound != null)
-                {
-                    nextWaveSound.Play();
-                }
-
-                // every wave one more enemy come
-                maxEnemies++; 
-                EnemyCount++;
-
-                for (int i = 0; i < EnemyCount; i++)
+                for (int i = 0; i < objectCount; i++)
                 {
                     // get a random number between 0 and the number of objects in the objects array
                     int rand = Random.Range(0, objects.Count);
@@ -70,24 +66,24 @@ public class WaveSpawner : MonoBehaviour
                     // get a random number between 0 and the number of spawns in the objects array
                     int randS = Random.Range(0, spawns.Count);
 
-                    if (amountOfEnemies < i)
-                    {
-                        // this is getting a rand and rands ints and spawning a object at a position in the objects index
-                        // and in the spawns index
-                        GameObject instance = (GameObject)Instantiate(objects[rand], spawns[i-1].position, transform.rotation);                           
-                        ObjectPooler.Instance.SpawnFromPool("Enemy", spawns[i-1], transform.rotation);
+                    // spawn the object at the random spawn position
+                    GameObject instance = ObjectPooler.Instance.RandomlySpawnFromPools(objects, spawns[randS], spawns[randS].rotation);
 
-                        instance.transform.parent = transform;
-                    }
-                        
-                    
-                    // spawns an object after a certain amount of time is over
-                    yield return new WaitForSeconds(spawnWait);
+                    instance.transform.parent = null;
 
+                    yield return new WaitForSeconds(spawnWait); // wait for x seconds before spawning the next object
                 }
             }
-            yield return new WaitForSeconds(waveWait);
-        }
 
+            yield return new WaitForSeconds(waveWait); // wait for x seconds before spawning the next wave
+            
+            waveCount++;
+            maxObjects++;
+            objectCount++;
+
+            if (nextWaveSound != null)
+            {
+                audioSource.PlayOneShot(nextWaveSound);
+            }
     }
 }

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6902689669043348222}
   - component: {fileID: 4491182248337792157}
   - component: {fileID: 4013667347547900595}
+  - component: {fileID: -6588333759796641866}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -91,7 +92,7 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6604452056388335247}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
@@ -106,5 +107,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 87cc0405c87f8dc4d9006d88fa6a78b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyTag: Enemies
+--- !u!114 &-6588333759796641866
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6604452056388335247}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b5a6c1239fce864b8daf1d6804ab46c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

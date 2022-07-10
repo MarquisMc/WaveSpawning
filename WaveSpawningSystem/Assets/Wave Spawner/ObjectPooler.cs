@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class ObjectPooler : MonoBehaviour
 {
@@ -33,9 +34,11 @@ public class ObjectPooler : MonoBehaviour
     public List<Pool> pools;
     public Dictionary<string, Queue<GameObject>> poolDictionary;
 
-    public List<int> ObjInPoolSize = new List<int>();
+    List<int> ObjInPoolSize = new List<int>();
 
     public Queue<GameObject> objectPool;
+
+    List<GameObject> holders = new List<GameObject>();
 
     // Start is called before the first frame update
     void Start()
@@ -52,12 +55,12 @@ public class ObjectPooler : MonoBehaviour
             objectPool = new Queue<GameObject>();
 
             ObjInPoolSize.Add(pool.size);
-            GameObject holder = new GameObject(pool.tag + " Holder");
+            holders.Add(new GameObject(pool.tag));
 
             for (int i = 0; i < pool.size; i++)
             {
                 GameObject obj = Instantiate(pool.prefab);
-                obj.transform.parent = holder.transform;
+                obj.transform.parent = holders.Find(x => x.name == pool.tag).transform;
                 obj.name = pool.tag;
                 obj.SetActive(false);
                 objectPool.Enqueue(obj);
@@ -77,23 +80,37 @@ public class ObjectPooler : MonoBehaviour
         }
 
         GameObject objectToSpawn = poolDictionary[tag].Dequeue();
+        
+        objectToSpawn.SetActive(false);
         objectToSpawn.transform.position = position.position;
         objectToSpawn.transform.rotation = rotation;
         objectToSpawn.transform.parent = null;
-
+        objectToSpawn.SetActive(true);
+        
         poolDictionary[tag].Enqueue(objectToSpawn);
 
         Debug.Log("Spawned " + objectToSpawn.name + " from pool " + tag);
 
-        objectToSpawn.SetActive(true);
-
         return objectToSpawn;
+    }
+
+    public GameObject RandomlySpawnFromPools (List<string> tags, Transform position, Quaternion rotation)
+    {
+        if (tags.Count == 0)
+        {
+            Debug.LogWarning("No tags were given to randomly spawn from.");
+            return null;
+        }
+
+        int rand = Random.Range(0, tags.Count);
+        string tag = tags[rand];
+        return SpawnFromPool(tag, position, rotation);
     }
 
     // return object to pool
     public void ReturnToPool(string tag, GameObject objectToReturn)
     {
-        if (poolDictionary.ContainsKey(tag))
+        if (!poolDictionary.ContainsKey(tag))
         {
             Debug.LogWarning("Pool with tag " + tag + " doesn't excist.");
             return;
@@ -101,37 +118,42 @@ public class ObjectPooler : MonoBehaviour
 
         poolDictionary[tag].Enqueue(objectToReturn);
         objectToReturn.SetActive(false);
+        objectToReturn.transform.parent = holders.Find(x => x.name == tag).transform;
     }
 
     public void ReturnToPoolOnTrigger(string tag, GameObject objectToReturn, Collider other)
     {
-        if (poolDictionary.ContainsKey(tag) && other.gameObject.tag == tag)
+        if (!poolDictionary.ContainsKey(tag))
+        {
+            Debug.LogWarning("Pool with tag " + tag + " doesn't excist.");
+            return;
+        }
+
+        if (other.gameObject.tag == tag) 
         {
             poolDictionary[tag].Enqueue(objectToReturn);
             objectToReturn.SetActive(false);
-        }
-        else if (!poolDictionary.ContainsKey(tag))
-        {
-            Debug.LogWarning("Pool with tag " + tag + " doesn't excist.");
         }
     }
 
     public void ReturnToPoolOnTimer(string tag, GameObject objectToReturn, float time)
     {
+        if (!poolDictionary.ContainsKey(tag))
+        {
+            Debug.LogWarning("Pool with tag " + tag + " doesn't excist.");
+            return;
+        }
+
         if (timerData.GetCurrentTime() != time || timerData.GetCurrentTime() == 0)
         {
             timerData.SetTimer(time);
             timerData.StartTimer();
         }
 
-        if (poolDictionary.ContainsKey(tag) && timerData.GetCurrentTime() <= 0)
+        if (timerData.GetCurrentTime() <= 0)
         {
             poolDictionary[tag].Enqueue(objectToReturn);
             objectToReturn.SetActive(false);
-        }
-        else if (!poolDictionary.ContainsKey(tag))
-        {
-            Debug.LogWarning("Pool with tag " + tag + " doesn't excist.");
         }
     }
 }
